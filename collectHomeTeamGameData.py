@@ -37,17 +37,11 @@ games = pd.read_sql_query("SELECT " + ", ".join(selectors) + " FROM match", conn
 
 
 
-
-
 def get_possession(string):
 	ans = re.search(r"<homepos>(\d+)</homepos>", string)
 	if ans:
 		return int(ans.group(1))
 	return None
-
-
-
-games["possession"] = games["possession"].apply(get_possession)
 
 def get_crosses(string, home_id):
 	string = string.split("</value>")
@@ -59,8 +53,6 @@ def get_crosses(string, home_id):
 
 	return result
 
-games["cross"] = np.vectorize(get_crosses)(games["cross"], games["home_team_api_id"])
-
 
 def get_corners(string, home_id):
 	string = string.split("</value>")
@@ -71,8 +63,6 @@ def get_corners(string, home_id):
 			result += int(ans.group(2))
 
 	return result
-
-games["corner"] = np.vectorize(get_corners)(games["corner"], games["home_team_api_id"])
 
 def get_blocked_shots(string, home_id):
 	string = string.split("</value>")
@@ -94,9 +84,6 @@ def get_unblocked_shots(string, home_id):
 
 	return result
 
-games["unblocked"] = np.vectorize(get_blocked_shots)(games["shoton"], games["home_team_api_id"])
-games["blocked"] = np.vectorize(get_unblocked_shots)(games["shoton"], games["home_team_api_id"])
-
 def get_off_target(string, home_id):
 	string = string.split("</value>")
 	result = 0
@@ -107,6 +94,12 @@ def get_off_target(string, home_id):
 
 	return result
 
+
+games["possession"] = games["possession"].apply(get_possession)
+games["cross"] = np.vectorize(get_crosses)(games["cross"], games["home_team_api_id"])
+games["corner"] = np.vectorize(get_corners)(games["corner"], games["home_team_api_id"])
+games["unblocked"] = np.vectorize(get_blocked_shots)(games["shoton"], games["home_team_api_id"])
+games["blocked"] = np.vectorize(get_unblocked_shots)(games["shoton"], games["home_team_api_id"])
 games["shotoff"] = np.vectorize(get_off_target)(games["shotoff"], games["home_team_api_id"])
 
 games = games.dropna()
